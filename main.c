@@ -24,97 +24,40 @@ pthread_t rThread;
 unsigned char key[10];
 
 
-int sendFile(unsigned char * fileLoc, unsigned char * key, int socketAddr) {
-    unsigned char iv[6];                  // 6 byte IV
-    unsigned char ivkey[16];              // 16 byte iv+key for KSA
-    unsigned char s[256];                 // s holds internal state
-    unsigned int i,j;
-    i = j = 0;
-
-    unsigned int messageLen = openMessage(fileLoc); printf("messageLen: %d\n\n", messageLen);
-    unsigned char message[messageLen];
-    unsigned char encrypted[messageLen];
-    unsigned char decrypted[messageLen];
-    unsigned char ivEncrypted[messageLen + 6];
-
-    ivkeyCreate(iv, key, ivkey); printf("IV KEY: %sEND\n\n", ivkey);
-    readMessage(message, messageLen, fileLoc);
-    printf("Message: %s\n", messageLen, message);
-
-    ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
-    encrypt(s, message, encrypted, decrypted, i, j);
-    addIV(iv, encrypted, ivEncrypted, messageLen);
-
-    send(socketAddr, ivEncrypted, messageLen+6, 0);
-    printf("\n\nEncrypted message sent: %s\n", ivEncrypted);
-
-    ksa(s, ivkey, 16, i, j); //printf("\nTWO %d, %d\n", s[0],s[1]);
-    decrypt(s, message, encrypted, decrypted, i, j);    //*/
-}
-
-
 int sendMessage(unsigned char * key, int socketAddr) {
-    int check = 0;
+
     while(1) {
-        if(check == 0)
-            check = 1;
-        else if (check == 1) {
-            char messageText[250];
-            printf("\nMessage > ");
-            fgets(messageText, 250, stdin);
-            /*printf("messageBUFFER: %s", messageBuffer);
-            scanf("%[^\n]%*c", messageBuffer);
-            printf("\nMessageBuffer2: %s", messageBuffer);
-            printf("HERETWO");
-            unsigned char messageText[256];
-            printf("HEREONE");
-            strncpy(messageText, messageBuffer, 256);
-            printf("\nMessage Text: %sEND\n", messageText); //*/
+        char messageText[250];
+        memset(messageText, '\0', 250);
+        printf("\nMessage > ");
+        fgets(messageText, 250, stdin);
 
-            if (messageText == 'quit') {
-                printf("\n\nQuitting...");
-                exit(0);
-            }
-
-            unsigned char iv[6];                  // 6 byte IV
-            unsigned char ivkey[16];              // 16 byte iv+key for KSA
-            unsigned char s[256];                 // s holds internal state
-            unsigned int i, j;
-            i = j = 0;
-
-            unsigned int messageLen = 250;        //sizeof(messageText);
-            //printf("\n\nmessageLen: %d\n\n", messageLen);
-            unsigned char message[messageLen];
-            unsigned char encrypted[messageLen];
-            unsigned char decrypted[messageLen];
-            unsigned char ivEncrypted[messageLen + 6];
-            memset(ivEncrypted, '\0', 256);
-
-            ivkeyCreate(iv, key, ivkey);
-
-            /*printf("IV KEY: ");
-            for (int k = 0; k < 16; k++) {
-                printf("%.2x ", ivkey[k]);
-            } //*/
-            //printf("Encrypted Message: ");
-
-            ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
-            encrypt(s, messageText, encrypted, decrypted, i, j);
-            addIV(iv, encrypted, ivEncrypted, messageLen);
-
-            /*unsigned char sendBuffer[256];
-            strcpy(sendBuffer, ivEncrypted);*/
-
-            /*printf("\n\nTo Send: ");
-            for (int i = 0; i < 256; i++)
-                printf("%.2x ", ivEncrypted[i]); //*/
-
-            send(socketAddr, ivEncrypted, 256, 0);
-
-            /*printf("\n\nDecrypted: ");
-            ksa(s, ivkey, 16, i, j);
-            decrypt(s, messageLen, encrypted, decrypted, i, j); //*/
+        if (*messageText == 'quit') {
+            printf("\n\nQuitting...");
+            exit(0);
         }
+
+        unsigned char iv[6];                  // 6 byte IV
+        unsigned char ivkey[16];              // 16 byte iv+key for KSA
+        unsigned char s[256];                 // s holds internal state
+        unsigned int i, j;
+        i = j = 0;
+
+        unsigned int messageLen = strlen(messageText);        //sizeof(messageText);
+        //printf("\n\nmessageLen: %d\n\n", messageLen);
+        unsigned char message[messageLen];
+        unsigned char encrypted[messageLen];
+        unsigned char decrypted[messageLen];
+        unsigned char ivEncrypted[messageLen + 7];
+
+        ivkeyCreate(iv, key, ivkey);
+
+        ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
+        encrypt(s, messageText, encrypted, decrypted, i, j, messageLen);
+        addIV(iv, encrypted, ivEncrypted, messageLen);
+
+        send(socketAddr, ivEncrypted, (messageLen+7), 0);
+
     }
 }
 
@@ -132,39 +75,30 @@ void decryptPrint(char * buffer) {
     for(int j = 0; j < 10; j++) {
         ivkey[j+6] = key[j];
     }
-    /*unsigned char * messageText[256];
-    strncpy(messageText, buffer, 256); //*/
 
-    int messageLen =  250;  //sizeof(messageText); //printf("\n\nmessageLen: %d\n\n", messageLen);
-    //unsigned char message[messageLen];
+    int messageLen =  buffer[6];
     unsigned char encrypted[messageLen];
     unsigned char decrypted[messageLen];
 
     for(int k = 0; k < messageLen; k++) {
-        encrypted[k] = buffer[k+6];
+        encrypted[k] = buffer[k+7];
     }
-    /*printf("IV Key: ");
-    for(int k = 0; k < 16; k++)
-        printf("%.2x ", ivkey); //*/
+
     printf("\n\nReceived: ");
     ksa(s, ivkey, 16, i ,j);
     decrypt(s, messageLen, encrypted, decrypted, i, j);
-    printf("\n\n");
+    printf("\n");
 }
 
 
 void receiveMessage(int socketAddr) {
     char buffer[256];
-    //memset(buffer, 0, 256);
     while(1) {
         if(recvfrom(socketAddr, buffer, 256, 0, NULL, NULL) < 0) {
             printf("\nError receieving data\n");
             exit(1);
         }
         else {
-            /*printf("\nRecieved: ");
-            for(int i = 0; i < 256; i++)
-                printf("%.2x ", buffer[i]); //*/
             decryptPrint(buffer);
         }
     }
@@ -244,7 +178,7 @@ int main(void) {
     char lineBuffer[256];
     srand((unsigned int)time(NULL));
 
-    printf("\n~ ~ ~ ~ ~ RC4 Encrypted File Transfer/Chat v1.04 ~ ~ ~ ~ ~\n\n");
+    printf("\n~ ~ ~ ~ ~ RC4 Encrypted File Transfer/Chat v1.05 ~ ~ ~ ~ ~\n\n");
     printf("Type your RC4 symmetric key > ");
 
     fgets(lineBuffer, sizeof(lineBuffer), stdin);
@@ -286,8 +220,8 @@ int main(void) {
             unsigned char *fileLoc = malloc(strlen(lineBuffer));
             strncpy(fileLoc, lineBuffer, strlen(lineBuffer));
             printf("\nFile location: %sEND\n", fileLoc); //*/
-
-            sendFile(fileLoc, key, socketAddr);
+            printf("adding functionality...");
+            //sendFile(fileLoc, key, socketAddr);
             break;
         }
         if (option == 2) {

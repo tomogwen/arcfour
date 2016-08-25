@@ -79,8 +79,8 @@ unsigned char prga(unsigned char * s, unsigned int i, unsigned int j) {
 }
 
 
-int encrypt(unsigned char * s, unsigned char * message, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j) {
-    for(int k = 0; k < strlen(message); k++) {
+int encrypt(unsigned char * s, unsigned char * message, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j, unsigned int messageLen) {
+    for(int k = 0; k < messageLen; k++) {
         encrypted[k] = (message[k]) ^ (prga(s,i,j));
         //printf("%.2x ", encrypted[k]);
     }
@@ -99,10 +99,40 @@ void addIV(unsigned char * iv, unsigned char * encrypted, unsigned char * ivEncr
     for(int i = 0; i < 6; i++) {
         ivEncrypted[i] = iv[i];
     }
+    ivEncrypted[6] = messageLen;
     for(int j = 0; j < messageLen; j++) {
-        ivEncrypted[j+6] = encrypted[j];
+        ivEncrypted[j+7] = encrypted[j];
     }
 }
+
+
+/*int sendFile(unsigned char * fileLoc, unsigned char * key, int socketAddr) {
+    unsigned char iv[6];                  // 6 byte IV
+    unsigned char ivkey[16];              // 16 byte iv+key for KSA
+    unsigned char s[256];                 // s holds internal state
+    unsigned int i,j;
+    i = j = 0;
+
+    unsigned int messageLen = openMessage(fileLoc); printf("messageLen: %d\n\n", messageLen);
+    unsigned char message[messageLen];
+    unsigned char encrypted[messageLen];
+    unsigned char decrypted[messageLen];
+    unsigned char ivEncrypted[messageLen + 6];
+
+    ivkeyCreate(iv, key, ivkey); printf("IV KEY: %sEND\n\n", ivkey);
+    readMessage(message, messageLen, fileLoc);
+    printf("Message: %s\n", messageLen, message);
+
+    ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
+    encrypt(s, message, encrypted, decrypted, i, j);
+    addIV(iv, encrypted, ivEncrypted, messageLen);
+
+    send(socketAddr, ivEncrypted, messageLen+6, 0);
+    printf("\n\nEncrypted message sent: %s\n", ivEncrypted);
+
+    ksa(s, ivkey, 16, i, j); //printf("\nTWO %d, %d\n", s[0],s[1]);
+    decrypt(s, message, encrypted, decrypted, i, j, messaageLen);
+} //*/
 
 
 #endif //ARCFOUR_FUNCS_H

@@ -22,38 +22,6 @@ void ivkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey)
 }
 
 
-unsigned int openMessage(unsigned char * fileLoc) {
-    FILE * messageFile;
-    //printf("\nFile location: %s\n", fileLoc);
-    messageFile = fopen(fileLoc, "r");
-    printf("\nFile Location OPENMESSAGE: %s\n", fileLoc);
-    if(!messageFile) {
-        printf("Cannot open message file");
-        exit(1);
-    }
-    printf("\nFile opened (openMessage)\n\n");
-    fseek(messageFile, 0L, SEEK_END);
-    unsigned int messageLen = ftell(messageFile);
-    rewind(messageFile);
-    fclose(messageFile);
-
-    return messageLen;
-}
-
-
-void readMessage(unsigned char * message, unsigned int messageLen, unsigned char * fileLoc) {
-    FILE * messageFile;
-    messageFile = fopen(fileLoc, "r");
-    if(!messageFile) {
-        printf("Cannot open message file");
-        exit(1);
-    }
-
-    fgets(message, messageLen, messageFile);
-    fclose(messageFile);
-}
-
-
 void ksa(unsigned char * s, unsigned char * ivkey, unsigned int keyLength, unsigned int i, unsigned int j) {
     for(i = 0; i < 256; i++) {
         s[i] = i;
@@ -106,7 +74,40 @@ void addIV(unsigned char * iv, unsigned char * encrypted, unsigned char * ivEncr
 }
 
 
-/*int sendFile(unsigned char * fileLoc, unsigned char * key, int socketAddr) {
+/*
+void readMessage(unsigned char * message, unsigned int messageLen, unsigned char * fileLoc) {
+    FILE * messageFile;
+    messageFile = fopen(fileLoc, "r");
+    if(!messageFile) {
+        printf("Cannot open message file");
+        exit(1);
+    }
+
+    fgets(message, messageLen, messageFile);
+    fclose(messageFile);
+}
+
+
+unsigned int openMessage(unsigned char * fileLoc) {
+    FILE * messageFile;
+    //printf("\nFile location: %s\n", fileLoc);
+    messageFile = fopen(fileLoc, "r");
+    printf("\nFile Location OPENMESSAGE: %s\n", fileLoc);
+    if(!messageFile) {
+        printf("Cannot open message file");
+        exit(1);
+    }
+    printf("\nFile opened (openMessage)\n\n");
+    fseek(messageFile, 0L, SEEK_END);
+    unsigned int messageLen = ftell(messageFile);
+    rewind(messageFile);
+    fclose(messageFile);
+
+    return messageLen;
+}
+
+
+int sendFile(unsigned char * fileLoc, unsigned char * key, int socketAddr) {
     unsigned char iv[6];                  // 6 byte IV
     unsigned char ivkey[16];              // 16 byte iv+key for KSA
     unsigned char s[256];                 // s holds internal state
@@ -132,8 +133,8 @@ void addIV(unsigned char * iv, unsigned char * encrypted, unsigned char * ivEncr
 
     ksa(s, ivkey, 16, i, j); //printf("\nTWO %d, %d\n", s[0],s[1]);
     decrypt(s, message, encrypted, decrypted, i, j, messaageLen);
-} //*/
-
+}
+*/
 
 #endif //ARCFOUR_FUNCS_H
 

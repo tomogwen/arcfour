@@ -44,8 +44,6 @@ int sendMessage(unsigned char * key, int socketAddr) {
         i = j = 0;
 
         unsigned int messageLen = strlen(messageText);        //sizeof(messageText);
-        //printf("\n\nmessageLen: %d\n\n", messageLen);
-        unsigned char message[messageLen];
         unsigned char encrypted[messageLen];
         unsigned char decrypted[messageLen];
         unsigned char ivEncrypted[messageLen + 7];

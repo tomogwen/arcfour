@@ -22,7 +22,7 @@ struct sockaddr_in serverAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size;
 pthread_t rThread;
-unsigned char key[10];
+unsigned char key[5];
 
 
 void sendMessage(unsigned char * key, int socketAddr, int option) {
@@ -39,8 +39,8 @@ void sendMessage(unsigned char * key, int socketAddr, int option) {
             messageText[0] = 'a';
         }
 
-        unsigned char iv[6];                  // 6 byte IV
-        unsigned char ivkey[16];              // 16 byte iv+key for KSA
+        unsigned char iv[3];                  // 6 byte IV
+        unsigned char ivkey[8];              // 16 byte iv+key for KSA
         unsigned char s[256];                 // s holds internal state
         unsigned int i, j;
         i = j = 0;
@@ -48,43 +48,43 @@ void sendMessage(unsigned char * key, int socketAddr, int option) {
         unsigned int messageLen = strlen(messageText);        //sizeof(messageText);
         unsigned char encrypted[messageLen];
         unsigned char decrypted[messageLen];
-        unsigned char ivEncrypted[messageLen + 7];
+        unsigned char ivEncrypted[messageLen + 4];
 
         ivkeyCreate(iv, key, ivkey);
 
-        ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
+        ksa(s, ivkey, 8, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
         encryptMine(s, messageText, encrypted, decrypted, i, j, messageLen);
         addIV(iv, encrypted, ivEncrypted, messageLen);
 
-        send(socketAddr, ivEncrypted, (messageLen+7), 0);
+        send(socketAddr, ivEncrypted, (messageLen+4), 0);
     }
 }
 
 
 void decryptPrint(char * buffer) {
 
-    unsigned char ivkey[16];              // 16 byte iv+key for KSA
+    unsigned char ivkey[8];              // 16 byte iv+key for KSA
     unsigned char s[256];                 // s holds internal state
     unsigned int i,j;
     i = j = 0;
 
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 3; i++) {
         ivkey[i] = buffer[i];
     }
-    for(int j = 0; j < 10; j++) {
-        ivkey[j+6] = key[j];
+    for(int j = 0; j < 5; j++) {
+        ivkey[j+3] = key[j];
     }
 
-    int messageLen =  buffer[6];
+    int messageLen =  buffer[3];
     unsigned char encrypted[messageLen];
     unsigned char decrypted[messageLen];
 
     for(int k = 0; k < messageLen; k++) {
-        encrypted[k] = buffer[k+7];
+        encrypted[k] = buffer[k+4];
     }
 
     printf("> ");
-    ksa(s, ivkey, 16, i ,j);
+    ksa(s, ivkey, 8, i ,j);
     decrypt(s, messageLen, encrypted, decrypted, i, j);
 }
 
@@ -177,10 +177,10 @@ int main(void) {
     srand((unsigned int)time(NULL));
 
     printf("\n~ ~ ~ ~ ~ RC4 Encrypted File Transfer/Chat v1.05 ~ ~ ~ ~ ~\n\n");
-    printf("Type your RC4 symmetric key > ");
+    printf("Type your RC4 symmetric key (5 chars) > ");
 
     fgets(lineBuffer, sizeof(lineBuffer), stdin);
-    strncpy(key, lineBuffer, 10);
+    strncpy(key, lineBuffer, 5);
     memset(lineBuffer, 0, 256);
     fflush(stdin); //*/
 

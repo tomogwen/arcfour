@@ -10,14 +10,14 @@
 
 
 void ivkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey) {
-    for(unsigned int k = 0; k < 6; k++) {
+    for(unsigned int k = 0; k < 3; k++) {
         iv[k] = rand() % 127;
     }
-    for(unsigned int i = 0; i < 6; i++) {
+    for(unsigned int i = 0; i < 3; i++) {
         ivkey[i] = iv[i];
     }
-    for(unsigned int j = 0; j < 10; j++) {
-        ivkey[j+6] = key[j];
+    for(unsigned int j = 0; j < 5; j++) {
+        ivkey[j+3] = key[j];
     }
 }
 
@@ -64,12 +64,12 @@ void decrypt(unsigned char * s, int messageLen, unsigned char * encrypted, unsig
 
 
 void addIV(unsigned char * iv, unsigned char * encrypted, unsigned char * ivEncrypted, unsigned int messageLen) {
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 3; i++) {
         ivEncrypted[i] = iv[i];
     }
-    ivEncrypted[6] = messageLen;
+    ivEncrypted[3] = messageLen;
     for(int j = 0; j < messageLen; j++) {
-        ivEncrypted[j+7] = encrypted[j];
+        ivEncrypted[j+4] = encrypted[j];
     }
 }
 

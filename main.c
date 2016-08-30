@@ -11,6 +11,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <unistd.h>
 //#include <unistd.h>
 
 #include "funcs.h"
@@ -24,17 +25,18 @@ pthread_t rThread;
 unsigned char key[10];
 
 
-int sendMessage(unsigned char * key, int socketAddr) {
+void sendMessage(unsigned char * key, int socketAddr, int option) {
+    int count = 0;
 
     while(1) {
         char messageText[250];
-        memset(messageText, '\0', 250);
-        printf("\nMessage > ");
-        fgets(messageText, 250, stdin);
-
-        if (*messageText == 'quit') {
-            printf("\n\nQuitting...");
-            exit(0);
+        if(option == 0) {
+            memset(messageText, '\0', 250);
+            //printf("\nMessage > ");
+            fgets(messageText, 250, stdin);
+        }
+        else if (option == 1) {
+            messageText[0] = 'a';
         }
 
         unsigned char iv[6];                  // 6 byte IV
@@ -51,11 +53,10 @@ int sendMessage(unsigned char * key, int socketAddr) {
         ivkeyCreate(iv, key, ivkey);
 
         ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
-        encrypt(s, messageText, encrypted, decrypted, i, j, messageLen);
+        encryptMine(s, messageText, encrypted, decrypted, i, j, messageLen);
         addIV(iv, encrypted, ivEncrypted, messageLen);
 
         send(socketAddr, ivEncrypted, (messageLen+7), 0);
-
     }
 }
 
@@ -82,10 +83,9 @@ void decryptPrint(char * buffer) {
         encrypted[k] = buffer[k+7];
     }
 
-    printf("\n\nReceived: ");
+    printf("> ");
     ksa(s, ivkey, 16, i ,j);
     decrypt(s, messageLen, encrypted, decrypted, i, j);
-    printf("\n");
 }
 
 
@@ -93,7 +93,7 @@ void receiveMessage(int socketAddr) {
     char buffer[256];
     while(1) {
         if(recvfrom(socketAddr, buffer, 256, 0, NULL, NULL) < 0) {
-            printf("\nError receieving data\n");
+            printf("\nError receiving data\n");
             exit(1);
         }
         else {
@@ -121,7 +121,7 @@ int serverSetup(void) {
 
     //listen on the socket, max five connections
     if(listen(welcomeSocket,5)==0)
-        printf("Waiting for connections...\n");
+        printf("\nWaiting for connections...\n");
     else {
         printf("Error listening\n");
         exit(0);
@@ -163,7 +163,7 @@ int clientSetup(void) {
         exit(1);
     }
     else {
-        printf("\nConnected to the server");
+        printf("Connected to the server\n");
     }
 
     return newSocket;
@@ -184,7 +184,7 @@ int main(void) {
     memset(lineBuffer, 0, 256);
     fflush(stdin); //*/
 
-    printf("\nDo you want to run as server (1) or client (2)? > ");
+    printf("Do you want to run as server (1) or client (2)? > ");
     scanf("%s", charOption);
     option = atoi(charOption);
 
@@ -202,12 +202,13 @@ int main(void) {
         }
     }
 
+    atexit(shutdown(socketAddr, 'MT-Safe'));
     if( pthread_create(&rThread, NULL, receiveMessage, (void *)socketAddr) ) {
         printf("\nError: thread can't create");
         exit(1);
     } //*/
 
-    printf("\nDo you want to send files (1) or message from the command line (2)? > ");
+    printf("\nDo you want to send files (1), message from the command line (2) or simulate WEP traffic (3)? > ");
     scanf("%s", charOption);
     option = atoi(charOption);
 
@@ -223,10 +224,15 @@ int main(void) {
             break;
         }
         if (option == 2) {
-            sendMessage(key, socketAddr);
+            sendMessage(key, socketAddr, 0);
             break;
-        } else {
-            printf("Invalid Option");
+        }
+        if (option == 3) {
+            printf("\n\nSimulating WEP traffic. Warning: CPU intensive");
+            sendMessage(key, socketAddr, 1);
+        }
+        else {
+            printf("Invalid Option, choose again > ");
         }
     }
 

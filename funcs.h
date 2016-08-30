@@ -47,7 +47,7 @@ unsigned char prga(unsigned char * s, unsigned int i, unsigned int j) {
 }
 
 
-int encrypt(unsigned char * s, unsigned char * message, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j, unsigned int messageLen) {
+void encryptMine(unsigned char * s, unsigned char * message, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j, unsigned int messageLen) {
     for(int k = 0; k < messageLen; k++) {
         encrypted[k] = (message[k]) ^ (prga(s,i,j));
         //printf("%.2x ", encrypted[k]);
@@ -55,7 +55,7 @@ int encrypt(unsigned char * s, unsigned char * message, unsigned char * encrypte
 }
 
 
-int decrypt(unsigned char * s, int messageLen, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j) {
+void decrypt(unsigned char * s, int messageLen, unsigned char * encrypted, unsigned char * decrypted, unsigned int i, unsigned int j) {
     for(int k = 0; k < messageLen; k++) {
         decrypted[k] = (encrypted[k]) ^ (prga(s,i,j));
         printf("%c", decrypted[k]);

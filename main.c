@@ -25,27 +25,21 @@ pthread_t rThread;
 unsigned char key[5];
 
 
-void sendMessage(unsigned char * key, int socketAddr, int option) {
-    int count = 0;
-
+void sendMessage(unsigned char * key, int socketAddr) {
     while(1) {
         char messageText[250];
-        if(option == 0) {
-            memset(messageText, '\0', 250);
-            //printf("\nMessage > ");
-            fgets(messageText, 250, stdin);
-        }
-        else if (option == 1) {
-            messageText[0] = 'a';
-        }
 
-        unsigned char iv[3];                  // 6 byte IV
-        unsigned char ivkey[8];              // 16 byte iv+key for KSA
+        memset(messageText, '\0', 250);
+        //printf("\nMessage > ");
+        fgets(messageText, 250, stdin);
+
+        unsigned char iv[3];                  // 24 bit IV
+        unsigned char ivkey[8];               // 60 bit iv+key for KSA
         unsigned char s[256];                 // s holds internal state
         unsigned int i, j;
         i = j = 0;
 
-        unsigned int messageLen = strlen(messageText);        //sizeof(messageText);
+        unsigned int messageLen = strlen(messageText);
         unsigned char encrypted[messageLen];
         unsigned char decrypted[messageLen];
         unsigned char ivEncrypted[messageLen + 4];
@@ -170,13 +164,49 @@ int clientSetup(void) {
 }
 
 
+void simulateWep(unsigned char * key) {
+    FILE *fp = fopen("traffic.rcf", "w");
+    if(fp == NULL) {
+        printf("\n\nError opening file");
+        exit(1);
+    }
+
+    for(int l = 0; l < 10000000; l++) {
+        unsigned char messageText[1];
+        messageText[0] = 'a';
+        unsigned char iv[3];                  // 24 bit IV
+        unsigned char ivkey[8];               // 60 bit iv+key for KSA
+        unsigned char s[256];                 // s holds internal state
+        unsigned int i, j;
+        i = j = 0;
+        unsigned int messageLen = strlen(messageText);
+        unsigned char encrypted[messageLen];
+        unsigned char decrypted[messageLen];
+        unsigned char ivEncrypted[messageLen + 4];
+
+        ivkeyCreate(iv, key, ivkey);
+        ksa(s, ivkey, 8, i, j);
+        encryptMine(s, messageText, encrypted, decrypted, i, j, messageLen);
+        addIV(iv, encrypted, ivEncrypted, messageLen);
+
+        //fprintf(fp, "%x%x%x%x%x\n", ivEncrypted[0], ivEncrypted[1], ivEncrypted[2], ivEncrypted[3], ivEncrypted[4]);
+        fprintf(fp, "%s\n", ivEncrypted);
+        if( l%500000 == 0) {
+            printf("Simulated %d WEP packets\n", l);
+        }
+    }
+    printf("\nSimulated WEP capture written to traffic.rcf");
+    printf("\nRC4 Key Used: %c%c%c%c%c\n\n", key[0],key[1],key[2],key[3],key[4]);
+}
+
+
 int main(void) {
     int option, socketAddr;
     char charOption[3];
     char lineBuffer[256];
     srand((unsigned int)time(NULL));
 
-    printf("\n~ ~ ~ ~ ~ RC4 Encrypted File Transfer/Chat v1.05 ~ ~ ~ ~ ~\n\n");
+    printf("\n~ ~ ~ ~ ~ RC4 Encrypted Chat/WEP Traffic Simulator v1.06 ~ ~ ~ ~ ~\n\n");
     printf("Type your RC4 symmetric key (5 chars) > ");
 
     fgets(lineBuffer, sizeof(lineBuffer), stdin);
@@ -184,7 +214,7 @@ int main(void) {
     memset(lineBuffer, 0, 256);
     fflush(stdin); //*/
 
-    printf("Do you want to run as server (1) or client (2)? > ");
+    printf("Do you want to run as server (1) or client (2), or simulate WEP traffic (3)? > ");
     scanf("%s", charOption);
     option = atoi(charOption);
 
@@ -196,7 +226,12 @@ int main(void) {
         if (option == 2) {
             socketAddr = clientSetup();
             break;
-        } else {
+        }
+        if (option == 3) {
+            simulateWep(key);
+            exit(0);
+        }
+        else {
             printf("\nIncorrect Option\n");
             //exit(0);
         }
@@ -208,7 +243,7 @@ int main(void) {
         exit(1);
     } //*/
 
-    printf("\nDo you want to send files (1), message from the command line (2) or simulate WEP traffic (3)? > ");
+    printf("\nDo you want to send files (1), message from the command line (2)? > ");
     scanf("%s", charOption);
     option = atoi(charOption);
 
@@ -224,12 +259,8 @@ int main(void) {
             break;
         }
         if (option == 2) {
-            sendMessage(key, socketAddr, 0);
+            sendMessage(key, socketAddr);
             break;
-        }
-        if (option == 3) {
-            printf("\n\nSimulating WEP traffic. Warning: CPU intensive");
-            sendMessage(key, socketAddr, 1);
         }
         else {
             printf("Invalid Option, choose again > ");

@@ -177,18 +177,18 @@ void simulateWep(unsigned char * key) {
         unsigned char s[256];                 // s holds internal state
         unsigned int i, j;
         i = j = 0;
-        unsigned int messageLen = strlen(messageText);
+        unsigned int messageLen = 1;
         unsigned char encrypted[messageLen];
         unsigned char decrypted[messageLen];
         unsigned char ivEncrypted[messageLen + 4];
 
-        ivkeyCreate(iv, key, ivkey);
+        weakIvkeyCreate(iv, key, ivkey);
         ksa(s, ivkey, 8, i, j);
         encryptMine(s, messageText, encrypted, decrypted, i, j, messageLen);
         addIV(iv, encrypted, ivEncrypted, messageLen);
 
         //fprintf(fp, "%x%x%x%x%x\n", ivEncrypted[0], ivEncrypted[1], ivEncrypted[2], ivEncrypted[3], ivEncrypted[4]);
-        fprintf(fp, "%s\n", ivEncrypted);
+        fprintf(fp, "%c%c%c%c%c", ivEncrypted[0], ivEncrypted[1], ivEncrypted[2], ivEncrypted[3], ivEncrypted[4]);
         if( l%500000 == 0) {
             printf("Simulated %d WEP packets\n", l);
         }

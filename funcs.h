@@ -8,21 +8,23 @@
 #include <string.h>
 
 
-unsigned int mod(unsigned int a, unsigned int b) {
-    while( (a < 0) || (a >= b) ) {
-        if(a < 0)
-            a += b;
-        if(a > b)
-            a -= b;
-    }
-    return a;
-}
-
-
 void ivkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey) {
     for(unsigned int k = 0; k < 3; k++) {
-        iv[k] = (unsigned char)( mod((unsigned int)rand(), 127) );
+        iv[k] = (unsigned char)(rand() % 127);
     }
+    for(unsigned int i = 0; i < 3; i++) {
+        ivkey[i] = iv[i];
+    }
+    for(unsigned int j = 0; j < 5; j++) {
+        ivkey[j+3] = key[j];
+    }
+}
+
+void weakIvkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey) {
+    for(unsigned int k = 0; k < 3; k++) {
+        iv[k] = (unsigned char)(rand() % 127);
+    }
+    iv[1] = 0xff;
     for(unsigned int i = 0; i < 3; i++) {
         ivkey[i] = iv[i];
     }
@@ -53,7 +55,7 @@ unsigned char prga(unsigned char * s, unsigned int i, unsigned int j) {
     unsigned char temp = s[j];
     s[j] = s[i];
     s[i] = temp;
-    return s[mod((s[i] + s[j]), 256)];
+    return s[(s[i] + s[j]) % 256];
 }
 
 

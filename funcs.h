@@ -1,4 +1,3 @@
-
 /* RC4 - Tom D */
 
 #ifndef ARCFOUR_FUNCS_H
@@ -9,9 +8,20 @@
 #include <string.h>
 
 
+unsigned int mod(unsigned int a, unsigned int b) {
+    while( (a < 0) || (a >= b) ) {
+        if(a < 0)
+            a += b;
+        if(a > b)
+            a -= b;
+    }
+    return a;
+}
+
+
 void ivkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey) {
     for(unsigned int k = 0; k < 3; k++) {
-        iv[k] = (unsigned char)(rand() % 127);
+        iv[k] = (unsigned char)( mod((unsigned int)rand(), 127) );
     }
     for(unsigned int i = 0; i < 3; i++) {
         ivkey[i] = iv[i];
@@ -43,7 +53,7 @@ unsigned char prga(unsigned char * s, unsigned int i, unsigned int j) {
     unsigned char temp = s[j];
     s[j] = s[i];
     s[i] = temp;
-    return s[(s[i] + s[j]) % 256];
+    return s[mod((s[i] + s[j]), 256)];
 }
 
 
@@ -82,12 +92,9 @@ void readMessage(unsigned char * message, unsigned int messageLen, unsigned char
         printf("Cannot open message file");
         exit(1);
     }
-
     fgets(message, messageLen, messageFile);
     fclose(messageFile);
 }
-
-
 unsigned int openMessage(unsigned char * fileLoc) {
     FILE * messageFile;
     //printf("\nFile location: %s\n", fileLoc);
@@ -102,40 +109,30 @@ unsigned int openMessage(unsigned char * fileLoc) {
     unsigned int messageLen = ftell(messageFile);
     rewind(messageFile);
     fclose(messageFile);
-
     return messageLen;
 }
-
-
 int sendFile(unsigned char * fileLoc, unsigned char * key, int socketAddr) {
     unsigned char iv[6];                  // 6 byte IV
     unsigned char ivkey[16];              // 16 byte iv+key for KSA
     unsigned char s[256];                 // s holds internal state
     unsigned int i,j;
     i = j = 0;
-
     unsigned int messageLen = openMessage(fileLoc); printf("messageLen: %d\n\n", messageLen);
     unsigned char message[messageLen];
     unsigned char encrypted[messageLen];
     unsigned char decrypted[messageLen];
     unsigned char ivEncrypted[messageLen + 6];
-
     ivkeyCreate(iv, key, ivkey); printf("IV KEY: %sEND\n\n", ivkey);
     readMessage(message, messageLen, fileLoc);
     printf("Message: %s\n", messageLen, message);
-
     ksa(s, ivkey, 16, i, j); //printf("ONE %d, %d\n", s[0],s[1]);
     encrypt(s, message, encrypted, decrypted, i, j);
     addIV(iv, encrypted, ivEncrypted, messageLen);
-
     send(socketAddr, ivEncrypted, messageLen+6, 0);
     printf("\n\nEncrypted message sent: %s\n", ivEncrypted);
-
     ksa(s, ivkey, 16, i, j); //printf("\nTWO %d, %d\n", s[0],s[1]);
     decrypt(s, message, encrypted, decrypted, i, j, messaageLen);
 }
 */
 
 #endif //ARCFOUR_FUNCS_H
-
-

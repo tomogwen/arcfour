@@ -1,5 +1,4 @@
-﻿
-/* RC4 - Tom D */
+﻿/* RC4 - Tom D */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -270,6 +269,3 @@ int main(void) {
     //close(socketAddr);
     return 0;
 }
-
-
-

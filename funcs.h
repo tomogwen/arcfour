@@ -11,7 +11,7 @@
 
 void ivkeyCreate(unsigned char * iv, unsigned char * key, unsigned char * ivkey) {
     for(unsigned int k = 0; k < 3; k++) {
-        iv[k] = rand() % 127;
+        iv[k] = (unsigned char)(rand() % 127);
     }
     for(unsigned int i = 0; i < 3; i++) {
         ivkey[i] = iv[i];
@@ -28,7 +28,7 @@ void ksa(unsigned char * s, unsigned char * ivkey, unsigned int keyLength, unsig
     }
 
     for(i = j = 0; i < 256; i++) {
-        j = (j + s[i] + ivkey[i % keyLength])%256;
+        j = (j + s[i] + ivkey[i % keyLength]) % 256;
         unsigned char temp = s[j];
         s[j] = s[i];
         s[i] = temp;

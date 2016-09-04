@@ -170,7 +170,6 @@ void simulateWep(unsigned char * key) {
         printf("\n\nError opening file");
         exit(1);
     }
-
     for(int l = 0; l < 10000000; l++) {
         unsigned char messageText[1];
         messageText[0] = 'a';
@@ -194,6 +193,7 @@ void simulateWep(unsigned char * key) {
         if( l%500000 == 0) {
             printf("Simulated %d WEP packets\n", l);
         }
+
     }
     printf("\nSimulated WEP capture written to traffic.rcf");
     printf("\nRC4 Key Used: %c%c%c%c%c\n\n", key[0],key[1],key[2],key[3],key[4]);
@@ -202,11 +202,11 @@ void simulateWep(unsigned char * key) {
 
 int main(void) {
     int option, socketAddr;
-    char charOption[3];
-    char lineBuffer[256];
+    unsigned char charOption[3];
+    unsigned char lineBuffer[256];
     srand((unsigned int)time(NULL));
 
-    printf("\n~ ~ ~ ~ ~ RC4 Encrypted Chat/WEP Traffic Simulator v1.06 ~ ~ ~ ~ ~\n\n");
+    printf("\n~ ~ ~ ~ ~ RC4 Encrypted Chat/WEP Traffic Simulator v1.07 ~ ~ ~ ~ ~\n\n");
     printf("Type your RC4 symmetric key (5 chars) > ");
 
     fgets(lineBuffer, sizeof(lineBuffer), stdin);
